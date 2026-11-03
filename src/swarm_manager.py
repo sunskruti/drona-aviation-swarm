@@ -38,6 +38,7 @@ from enum import Enum, auto
 import time
 from typing import Dict, List, Optional
 import numpy as np
+from scipy.optimize import linear_sum_assignment
 
 from formation.line import generate_line
 from formation.circle import generate_circle
@@ -103,9 +104,12 @@ class SwarmMissionManager:
         self.state_start_time = 0.0
         self.current_trajectory = None
 
-        # Precompute base geometry setpoints
+        # Precompute base geometry setpoints with optimal non-intersecting assignment
         self.line_positions = generate_line(self.num_drones, self.line_spacing, self.center)
-        self.circle_positions = generate_circle(self.num_drones, self.circle_radius, self.center)
+        raw_circle = generate_circle(self.num_drones, self.circle_radius, self.center)
+        cost_matrix = np.linalg.norm(self.line_positions[:, None, :] - raw_circle[None, :, :], axis=-1)
+        _, optimal_cols = linear_sum_assignment(cost_matrix)
+        self.circle_positions = raw_circle[optimal_cols]
 
     def transition_to(self, new_state: SwarmMissionState, current_time: float):
         """Perform state transition and initialize phase-specific trajectory."""
@@ -253,4 +257,102 @@ class SwarmMissionManager:
                     self.transition_to(SwarmMissionState.MISSION_COMPLETE, current_time)
 
         return self.state
+
+
+if __name__ == "__main__":
+    print("=" * 75)
+    print("DRONA AVIATION SWARM - AUTONOMOUS MISSION FLIGHT ORCHESTRATION")
+    print("=" * 75)
+
+    from simulation.drone_model import SimulatedPlutoDrone
+
+    # Initialize manager
+    manager = SwarmMissionManager(
+        drone_ids=[1, 2, 3, 4],
+        center=[0.0, 0.0, 1.5],
+        line_spacing=1.0,
+        circle_radius=1.0,
+        wave_amplitude=0.25,
+        wave_frequency=0.25
+    )
+
+    # Instantiate simulated physical drones with realistic ground-effect drift & sensor noise
+    sim_drones = {
+        d_id: SimulatedPlutoDrone(
+            drone_id=d_id,
+            initial_position=np.array([float(d_id - 2.5), 0.0, 0.0]),
+            sensor_noise_std=0.012
+        )
+        for d_id in manager.drone_ids
+    }
+
+    # Simulation parameters
+    dt = 0.02  # 50 Hz loop rate
+    sim_time = 0.0
+    max_mission_duration = 35.0  # Max seconds before timeout
+
+    print(f"[STATUS] Initial state: {manager.state.name}")
+    print("[STATUS] Beginning 50 Hz closed-loop mission execution...\n")
+
+    last_print_time = -1.0
+
+    while sim_time < max_mission_duration and manager.state != SwarmMissionState.MISSION_COMPLETE:
+        # Feed vision measurements from drones to manager tracker
+        for d_id in manager.drone_ids:
+            meas_pos = sim_drones[d_id].get_measured_position()
+            manager.tracker.process_raw_measurement(d_id, meas_pos, sim_time)
+
+        # Execute manager control step
+        current_state = manager.update(sim_time)
+
+        # Advance simulated drone dynamics using commands from controller
+        active_positions = manager.tracker.get_swarm_positions()
+        if len(active_positions) == manager.num_drones and manager.current_trajectory is not None:
+            tgt_pos, tgt_vel, _ = manager.current_trajectory.get_swarm_state(sim_time)
+            cmds, mean_err, max_err = manager.controller.update(
+                target_positions=tgt_pos,
+                actual_positions=active_positions,
+                target_velocities=tgt_vel,
+                current_time=sim_time
+            )
+            for d_id in manager.drone_ids:
+                u_cmd = cmds.get(d_id, np.zeros(3))
+                sim_drones[d_id].step(u_cmd, dt)
+
+            # Print telemetry at 2 Hz (every 0.5s)
+            if sim_time - last_print_time >= 0.5:
+                pos_arr = np.array([active_positions[d] for d in manager.drone_ids])
+                diff = pos_arr[:, None, :] - pos_arr[None, :, :]
+                dist = np.linalg.norm(diff, axis=-1)
+                np.fill_diagonal(dist, np.inf)
+                min_sep = np.min(dist)
+
+                print(
+                    f"t = {sim_time:5.2f}s | State: {current_state.name:<24} | "
+                    f"Mean Err: {mean_err * 100:4.1f}cm | Max Err: {max_err * 100:4.1f}cm | "
+                    f"Min Sep: {min_sep:4.2f}m"
+                )
+                last_print_time = sim_time
+
+        sim_time += dt
+
+    # Final summary and export
+    manager.logger.export_csv("flight_data.csv")
+    stats = manager.logger.compute_summary_statistics()
+
+    print("\n" + "=" * 75)
+    print("MISSION EXECUTION SUMMARY & PERFORMANCE REPORT METRICS")
+    print("=" * 75)
+    print(f"Final State             : {manager.state.name}")
+    print(f"Total Flight Samples    : {stats.get('total_samples', 0)} (at 50 Hz)")
+    print(f"Mean Formation Error    : {stats.get('mean_formation_error_m', 0.0) * 100:5.2f} cm")
+    print(f"Max Formation Error     : {stats.get('max_formation_error_m', 0.0) * 100:5.2f} cm")
+    print(f"RMSE (X axis)           : {stats.get('rmse_x_m', 0.0) * 100:5.2f} cm")
+    print(f"RMSE (Y axis)           : {stats.get('rmse_y_m', 0.0) * 100:5.2f} cm")
+    print(f"RMSE (Z altitude)       : {stats.get('rmse_z_m', 0.0) * 100:5.2f} cm")
+    print(f"Total Euclidean RMSE    : {stats.get('rmse_total_m', 0.0) * 100:5.2f} cm")
+    print(f"Minimum Observed Sep    : {stats.get('min_observed_separation_m', 0.0):5.2f} m  (Safety threshold: 0.40 m)")
+    print("Flight Telemetry Saved  : flight_data.csv")
+    print("=" * 75)
+
 
