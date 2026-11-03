@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  drona-swarm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: drona_aviation_swarm
+    network_mode: "host"  # Required for low-latency UDP communication with Pluto drones
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SWARM_CONFIG_PATH=/drona_swarm/config/swarm.yaml
+    volumes:
+      - ./plots:/drona_swarm/plots
+      - ./flight_data.csv:/drona_swarm/flight_data.csv
+    command: python3 src/simulation/swarm_simulator.py
+
