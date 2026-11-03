@@ -1,0 +1,19 @@
+# ==============================================================================
+# Drona Aviation Multi-Drone Swarm Configuration (Inter IIT Tech Meet 15.0)
+# ==============================================================================
+swarm:
+  num_drones: 4
+  drone_ids: [1, 2, 3, 4]
+  drone_names: ["Pluto_1", "Pluto_2", "Pluto_3", "Pluto_4"]
+  
+  # Flight Altitude and Operating Conventions
+  default_altitude: 1.5       # Target operating altitude in meters (Z-axis)
+  control_loop_frequency: 50  # Frequency in Hz (dt = 0.02s)
+  coordinate_frame: "ENU"     # East-North-Up: X: Right/East, Y: Forward/North, Z: Up
+  
+  # Communication & Network Settings for Pluto Hardware / Simulation
+  communication:
+    protocol: "ROS2"          # "ROS2" or "PlutoControl_UDP"
+    heartbeat_rate_hz: 10
+    command_timeout_sec: 0.5
+

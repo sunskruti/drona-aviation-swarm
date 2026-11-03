@@ -1,0 +1,24 @@
+# ==============================================================================
+# Formation Geometry & Wave Trajectory Parameters
+# ==============================================================================
+formations:
+  # Task 1: Line Formation
+  line:
+    spacing: 0.8              # Inter-drone center-to-center distance (meters)
+    center: [0.0, 0.0, 1.5]   # [x, y, z] origin in world frame
+    axis: "x"                 # Primary axis along which drones align ("x" or "y")
+    yaw_orientation_deg: 0.0  # Heading angle in degrees
+    
+  # Task 2: Circular Formation
+  circle:
+    radius: 1.0               # Radius of circle in meters
+    center: [0.0, 0.0, 1.5]   # [x, y, z] center of the circular swarm
+    start_angle_deg: 0.0      # Angular offset of first drone (degrees)
+    clockwise: false          # Angular increment direction
+
+wave_dynamics:
+  amplitude: 0.25             # Vertical displacement oscillation amplitude (meters)
+  frequency: 0.25             # Wave oscillation frequency in Hz (Period = 4.0s)
+  phase_shift_mode: "uniform" # Phase distribution: delta_phi = 2 * pi / N
+  cycles_to_execute: 3        # Number of complete wave cycles
+

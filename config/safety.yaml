@@ -1,0 +1,30 @@
+# ==============================================================================
+# Swarm Collision Avoidance & Safety Boundary Configuration
+# ==============================================================================
+safety:
+  # Inter-drone Collision Avoidance
+  min_separation_distance: 0.40  # Minimum safe distance between drone centers (meters)
+  collision_warning_distance: 0.55 # Warning buffer threshold (meters)
+
+  # Operational Flight Arena Geofence (Airlink Flying Arena)
+  arena_limits:
+    x_min: -2.5
+    x_max: 2.5
+    y_min: -2.5
+    y_max: 2.5
+    z_min: 0.2    # Minimum altitude to prevent ground strikes
+    z_max: 2.5    # Maximum ceiling altitude
+
+  # Kinematic & Dynamic Limits
+  kinematics:
+    max_horizontal_velocity: 0.8  # m/s
+    max_vertical_velocity: 0.5    # m/s
+    max_horizontal_accel: 1.0     # m/s^2
+    max_tilt_angle_deg: 25.0      # Roll/Pitch angle clamp
+
+  # Watchdogs & Fail-safe Rules
+  watchdog:
+    vision_loss_timeout_sec: 0.25 # Timeout before triggering localization fail-safe
+    telemetry_loss_timeout_sec: 0.50
+    fail_safe_action: "EMERGENCY_HOVER" # "EMERGENCY_HOVER", "LAND_IN_PLACE", "RTH"
+
