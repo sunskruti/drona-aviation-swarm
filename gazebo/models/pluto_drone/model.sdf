@@ -1,0 +1,160 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="pluto_drone">
+    <static>false</static>
+    <link name="base_link">
+      <inertial>
+        <mass>0.060</mass>
+        <inertia>
+          <ixx>0.000015</ixx>
+          <iyy>0.000015</iyy>
+          <izz>0.000025</izz>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+        </inertia>
+      </inertial>
+
+      <!-- Central Nano Quadrotor Body -->
+      <visual name="chassis_visual">
+        <geometry>
+          <box>
+            <size>0.08 0.08 0.02</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1 0.1 0.15 1.0</ambient>
+          <diffuse>0.2 0.2 0.3 1.0</diffuse>
+          <specular>0.8 0.8 0.8 1.0</specular>
+        </material>
+      </visual>
+
+      <!-- Arm X Visual (Cross configuration) -->
+      <visual name="arm_x_visual">
+        <geometry>
+          <box>
+            <size>0.14 0.012 0.006</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1.0</ambient>
+          <diffuse>0.3 0.3 0.3 1.0</diffuse>
+        </material>
+      </visual>
+
+      <!-- Arm Y Visual (Cross configuration) -->
+      <visual name="arm_y_visual">
+        <geometry>
+          <box>
+            <size>0.012 0.14 0.006</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1.0</ambient>
+          <diffuse>0.3 0.3 0.3 1.0</diffuse>
+        </material>
+      </visual>
+
+      <!-- Motor 1 (Front Right) -->
+      <visual name="rotor_1_visual">
+        <pose>0.05 0.05 0.01 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.003</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.2 0.7 0.9 0.8</ambient>
+          <diffuse>0.3 0.8 1.0 0.8</diffuse>
+        </material>
+      </visual>
+
+      <!-- Motor 2 (Front Left) -->
+      <visual name="rotor_2_visual">
+        <pose>-0.05 0.05 0.01 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.003</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.2 0.7 0.9 0.8</ambient>
+          <diffuse>0.3 0.8 1.0 0.8</diffuse>
+        </material>
+      </visual>
+
+      <!-- Motor 3 (Rear Left) -->
+      <visual name="rotor_3_visual">
+        <pose>-0.05 -0.05 0.01 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.003</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.1 0.1 0.1 0.8</ambient>
+          <diffuse>0.2 0.2 0.2 0.8</diffuse>
+        </material>
+      </visual>
+
+      <!-- Motor 4 (Rear Right) -->
+      <visual name="rotor_4_visual">
+        <pose>0.05 -0.05 0.01 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.003</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.1 0.1 0.1 0.8</ambient>
+          <diffuse>0.2 0.2 0.2 0.8</diffuse>
+        </material>
+      </visual>
+
+      <!-- Identification Marker (Top Plate for Overhead Camera Tracking) -->
+      <visual name="tracker_marker_visual">
+        <pose>0 0 0.012 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.04 0.04 0.002</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.2 0.2 1.0</ambient>
+          <diffuse>1.0 0.3 0.3 1.0</diffuse>
+        </material>
+      </visual>
+
+      <collision name="chassis_collision">
+        <geometry>
+          <cylinder>
+            <radius>0.08</radius>
+            <length>0.03</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- Velocity Control Plugin: Allows direct velocity commands via /cmd_vel -->
+    <plugin
+      filename="gz-sim-velocity-control-system"
+      name="gz::sim::systems::VelocityControl">
+      <initial_linear>0 0 0</initial_linear>
+      <initial_angular>0 0 0</initial_angular>
+    </plugin>
+
+    <!-- Pose Publisher Plugin: Broadcasts real-time ground truth pose -->
+    <plugin
+      filename="gz-sim-pose-publisher-system"
+      name="gz::sim::systems::PosePublisher">
+      <publish_link_pose>false</publish_link_pose>
+      <publish_nested_model_pose>true</publish_nested_model_pose>
+      <use_pose_vector_msg>true</use_pose_vector_msg>
+      <update_frequency>50</update_frequency>
+    </plugin>
+  </model>
+</sdf>
