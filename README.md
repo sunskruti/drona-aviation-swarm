@@ -135,6 +135,9 @@ Clamped to $\lVert \mathbf{u}_k \rVert \le \mathbf{v}_{\max} = [0.80, 0.80, 0.50
 ```
 
 ---
+<img width="3200" height="2400" alt="closed_loop_simulation_verification" src="https://github.com/user-attachments/assets/e3cf9ff0-4f63-49f0-aec1-2b3158d71f42" />
+
+
 
 ## 4. Quick Start & Execution
 
